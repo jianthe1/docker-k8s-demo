@@ -1,0 +1,53 @@
+name: CI/CD Pipeline
+
+# Trigger the workflow on pushes to the main branch
+on:
+  push:
+    branches: [ "main" ]
+
+# Define environment variables
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # Needed to push to GitHub Container Registry
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Set up Kubernetes access
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Deploy to K8s cluster
+        run: |
+          # Replace the local image name with the newly built GHCR image URL
+          sed -i "s|image: my-app:1.0|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest|g" k8s-deployment.yaml
+          
+          # Apply the configuration to your Oracle cloud cluster
+          kubectl apply -f k8s-deployment.yaml
+          
+          # Force Kubernetes to pull the fresh image and restart the pods safely
+          kubectl rollout restart deployment/web-deployment
