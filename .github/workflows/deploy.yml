@@ -7,6 +7,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  IMAGE_TAG: ${{github.sha }}
 
 jobs:
   build-and-deploy:
@@ -51,6 +52,6 @@ jobs:
 
       - name: Deploy to K8s cluster
         run: |
-          sed -i "s|image: my-app:1.0|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest|g" k8s-deployment.yaml
+          sed -i "s|image: my-app:1.0|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}|g" k8s-deployment.yaml
           kubectl apply -f k8s-deployment.yaml
           kubectl rollout restart deployment/web-deployment
