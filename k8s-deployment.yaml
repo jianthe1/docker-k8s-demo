@@ -45,7 +45,7 @@ spec:
     spec:
       containers:
       - name: web-app
-        image: ghcr.io/yourusername/docker-k8s-demo:latest # (Keep your existing image line)
+        image: ghcr.io/jianthe1/docker-k8s-demo:latest # (Keep your existing image line)
         ports:
         - containerPort: 3000
         # === NEW: Add Resource Limits ===
