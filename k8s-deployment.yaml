@@ -50,7 +50,7 @@ spec:
         - containerPort: 3000
         readinessProbe:
           httpGet:
-            path: /           # The URL path K8s will check
+            path: /readyz           # The URL path K8s will check
             port: 3000
           initialDelaySeconds: 5  # Wait 5 seconds after boot before checking
           periodSeconds: 10       # Check every 10 seconds
@@ -59,7 +59,7 @@ spec:
         # Checks if the app has frozen and needs a reboot
         livenessProbe:
           httpGet:
-            path: /
+            path: /health
             port: 3000
           initialDelaySeconds: 15 # Give it extra time to boot before threatening to kill it
           periodSeconds: 20
