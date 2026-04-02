@@ -48,6 +48,9 @@ spec:
         image: ghcr.io/jianthe1/docker-k8s-demo:latest # (Keep your existing image line)
         ports:
         - containerPort: 3000
+        env:
+        - name: REDIS_URL
+          value: "redis://redis-service:6379"
         readinessProbe:
           httpGet:
             path: /readyz           # The URL path K8s will check
