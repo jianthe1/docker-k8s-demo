@@ -44,13 +44,39 @@ spec:
         app: web
     spec:
       containers:
-      - name: web
-        image: my-app:1.0
-        env:
-        - name: REDIS_URL
-          value: "redis://redis-service:6379"
+      - name: web-app
+        image: ghcr.io/yourusername/docker-k8s-demo:latest # (Keep your existing image line)
         ports:
         - containerPort: 3000
+        # === NEW: Add Resource Limits ===
+        resources:
+          requests:
+            cpu: "50m"      # Ask for 5% of a CPU core to start
+            memory: "64Mi"  # Ask for 64 Megabytes of RAM
+          limits:
+            cpu: "200m"     # NEVER let this pod use more than 20% of a core
+            memory: "128Mi" # NEVER let this pod use more than 128 MB of RAM
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: web-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-deployment # This must exactly match the name of your deployment!
+  minReplicas: 2         # Never go below 2 pods (for high availability)
+  maxReplicas: 10        # Never go above 10 pods (to save money/resources)
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50 # If the average CPU hits 50%, spin up a new pod!
+        
 ---
 apiVersion: v1
 kind: Service
