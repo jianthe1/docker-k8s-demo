@@ -116,7 +116,8 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   rules:
-  - http:
+  - host: testermy-apps.duckdns.org  
+    http:
       paths:
       - path: /
         pathType: Prefix
