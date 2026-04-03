@@ -35,6 +35,13 @@ metadata:
   name: web-deployment
 spec:
   replicas: 3
+# === NEW: Rolling Update Strategy ===
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Build 1 new pod at a time
+      maxUnavailable: 0  # Never let the active pod count drop below 3 during the update
+      
   selector:
     matchLabels:
       app: web
