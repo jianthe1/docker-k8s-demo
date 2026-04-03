@@ -42,7 +42,7 @@ jobs:
           push: true
           # 3. NEW: Explicitly tell Docker to build for your Oracle ARM server!
           platforms: linux/arm64 
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Set up Kubernetes access
         uses: azure/k8s-set-context@v3
