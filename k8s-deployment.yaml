@@ -14,9 +14,19 @@ spec:
     spec:
       containers:
       - name: redis
-        image: redis:alpine
+        image: redis:latest
+        command: ["redis-server", "--appendonly", "yes"]  # <--- NEW: Tell Redis to save to disk
         ports:
         - containerPort: 6379
+        # === NEW: Plug in the USB Drive ===
+        volumeMounts:               
+        - name: redis-storage
+          mountPath: /data
+      volumes:                      
+      - name: redis-storage
+        persistentVolumeClaim:
+          claimName: redis-data-pvc
+      # ==================================
 ---
 apiVersion: v1
 kind: Service
@@ -136,3 +146,15 @@ spec:
             name: web-service
             port:
               number: 80
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
