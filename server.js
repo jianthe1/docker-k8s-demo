@@ -7,7 +7,7 @@ client.connect().catch(console.error);
 
 app.get('/', async (req, res) => {
     const count = await client.incr('visits');
-    res.send(`WELCOME TO VERSION 8.0! This page has been viewed ${count} times.`);
+    res.send(`WELCOME TO VERSION 100.0! This page has been viewed ${count} times.`);
 });
 
 app.get('/health', (req, res) => {
