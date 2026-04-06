@@ -52,6 +52,8 @@ jobs:
 
       - name: Deploy to K8s cluster
         run: |
-          sed -i "s|image: ghcr.io/jian1/docker-k8s-demo.* |image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}|g" k8s-deployment.yaml
+          # 1. Apply the base infrastructure (Services, Redis, etc.)
           kubectl apply -f k8s-deployment.yaml
-          kubectl rollout restart deployment/web-deployment
+          
+          # 2. Tell K8s to directly update ONLY the web-app container with the new unique image tag!
+          kubectl set image deployment/web-deployment web-app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
