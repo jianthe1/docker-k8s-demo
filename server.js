@@ -10,7 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Connect to the Redis Pod
 const client = redis.createClient({
-    url: 'redis://redis:6379'
+    url: 'redis://redis-service:6379'
 });
 
 client.on('error', (err) => console.log('Redis Client Error', err));
