@@ -176,5 +176,5 @@ app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/readyz', (req, res) => res.status(200).send('OK'));
 
 app.listen(port, () => {
-    console.log(\`Voting App listening on port \${port}\`);
+    console.log("Voting App listening on port" +port);
 });
