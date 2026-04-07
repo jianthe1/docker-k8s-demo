@@ -134,6 +134,9 @@ metadata:
   annotations:
     # This tells Traefik not to force HTTPS just yet
     traefik.ingress.kubernetes.io/router.entrypoints: web
+    # --- NEW: Call the Security Guard ---
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # ------------------------------------
 spec:
   rules:
   - host: testermy-apps.duckdns.org  
@@ -146,6 +149,12 @@ spec:
             name: web-service
             port:
               number: 80
+              # --- NEW: Tell Traefik to encrypt the traffic ---
+  tls:
+  - hosts:
+    - yourname.duckdns.org       # <--- Put your exact domain here again
+    secretName: web-ssl-cert     # K8s will automatically save the certificate here
+  # ------------------------------------------------
 
 ---
 apiVersion: v1
