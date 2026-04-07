@@ -133,7 +133,7 @@ metadata:
   name: web-ingress
   annotations:
     # This tells Traefik not to force HTTPS just yet
-    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.entrypoints: web, websecure
     # --- NEW: Call the Security Guard ---
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     # ------------------------------------
