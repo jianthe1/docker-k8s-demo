@@ -152,7 +152,7 @@ spec:
               # --- NEW: Tell Traefik to encrypt the traffic ---
   tls:
   - hosts:
-    - yourname.duckdns.org       # <--- Put your exact domain here again
+    - testermy-apps.duckdns.org       # <--- Put your exact domain here again
     secretName: web-ssl-cert     # K8s will automatically save the certificate here
   # ------------------------------------------------
 
