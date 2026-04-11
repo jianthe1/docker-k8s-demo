@@ -4,8 +4,6 @@ const { Server } = require('socket.io');
 const redis = require('redis');
 const os = require('os');
 
-//
-
 const app = express();
 // We wrap Express in a standard HTTP server so WebSockets can attach to it
 const server = http.createServer(app);
@@ -86,7 +84,7 @@ app.get('/', (req, res) => {
 
         <script src="/socket.io/socket.io.js"></script>
         <script>
-            const socket = io(); // Open the permanent pipeline
+            const socket = io({ transports: ['websocket'] }); // Force WebSockets immediately
 
             // When I click a button, send the vote through the pipeline
             function castVote(choice) {
