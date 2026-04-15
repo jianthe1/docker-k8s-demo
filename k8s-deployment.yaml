@@ -1,0 +1,169 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:latest
+        command: ["redis-server", "--appendonly", "yes"]  # <--- NEW: Tell Redis to save to disk
+        ports:
+        - containerPort: 6379
+        # === NEW: Plug in the USB Drive ===
+        volumeMounts:               
+        - name: redis-storage
+          mountPath: /data
+      volumes:                      
+      - name: redis-storage
+        persistentVolumeClaim:
+          claimName: redis-data-pvc
+      # ==================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+spec:
+  replicas: 3
+# === NEW: Rolling Update Strategy ===
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Build 1 new pod at a time
+      maxUnavailable: 0  # Never let the active pod count drop below 3 during the update
+      
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web-app
+        image: ghcr.io/jianthe1/docker-k8s-demo:latest # (Keep your existing image line)
+        ports:
+        - containerPort: 3000
+        env:
+        - name: REDIS_URL
+          value: "redis://redis-service:6379"
+        readinessProbe:
+          httpGet:
+            path: /readyz           # The URL path K8s will check
+            port: 3000
+          initialDelaySeconds: 5  # Wait 5 seconds after boot before checking
+          periodSeconds: 10       # Check every 10 seconds
+          
+        # === NEW: Liveness Probe ===
+        # Checks if the app has frozen and needs a reboot
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 15 # Give it extra time to boot before threatening to kill it
+          periodSeconds: 20
+        # === NEW: Add Resource Limits ===
+        resources:
+          requests:
+            cpu: "50m"      # Ask for 5% of a CPU core to start
+            memory: "64Mi"  # Ask for 64 Megabytes of RAM
+          limits:
+            cpu: "200m"     # NEVER let this pod use more than 20% of a core
+            memory: "128Mi" # NEVER let this pod use more than 128 MB of RAM
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: web-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-deployment # This must exactly match the name of your deployment!
+  minReplicas: 2         # Never go below 2 pods (for high availability)
+  maxReplicas: 10        # Never go above 10 pods (to save money/resources)
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50 # If the average CPU hits 50%, spin up a new pod!
+        
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  type: LoadBalancer 
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 3000
+
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+  annotations:
+    # This tells Traefik not to force HTTPS just yet
+    traefik.ingress.kubernetes.io/router.entrypoints: web, websecure
+    # --- NEW: Call the Security Guard ---
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # ------------------------------------
+spec:
+  rules:
+  - host: testermy-apps.duckdns.org  
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 80
+              # --- NEW: Tell Traefik to encrypt the traffic ---
+  tls:
+  - hosts:
+    - testermy-apps.duckdns.org       # <--- Put your exact domain here again
+    secretName: web-ssl-cert     # K8s will automatically save the certificate here
+  # ------------------------------------------------
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
