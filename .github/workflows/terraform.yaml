@@ -16,8 +16,14 @@ jobs:
       OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
       OCI_REGION: ${{ secrets.OCI_REGION }}
       OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
-      TF_VAR_tenancy_ocid: ${{ secrets.OCI_TENANCY_OCID }} # Feeds your main.tf variable
-      TF_VAR_db_admin_password: ${{ secrets.DB_ADMIN_PASSWORD }} # Feeds your database password
+      
+      # The Translations: This feeds the variables directly into main.tf
+      TF_VAR_tenancy_ocid: ${{ secrets.OCI_TENANCY_OCID }}
+      TF_VAR_user_ocid: ${{ secrets.OCI_USER_OCID }}
+      TF_VAR_fingerprint: ${{ secrets.OCI_FINGERPRINT }}
+      TF_VAR_region: ${{ secrets.OCI_REGION }}
+      TF_VAR_private_key: ${{ secrets.OCI_PRIVATE_KEY }}
+      TF_VAR_db_admin_password: ${{ secrets.DB_ADMIN_PASSWORD }}
 
     steps:
     - name: Checkout Code
