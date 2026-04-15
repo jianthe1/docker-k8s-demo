@@ -7,7 +7,7 @@ variable "tenancy_ocid" {}
 variable "user_ocid" {}
 variable "fingerprint" {}
 variable "region" {}
-variable "private_key_path" {
+variable "private_key" {
   sensitive = true
 }
 
@@ -17,7 +17,7 @@ provider "oci" {
   user_ocid        = var.user_ocid
   fingerprint      = var.fingerprint
   region           = var.region
-  # private_key_path = var.private_key_path
+  private_key  = var.private_key
 }
 
 # --- 3. THE HANDSHAKE (Ask Oracle for a list of Data Centers) ---
