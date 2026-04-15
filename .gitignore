@@ -1,0 +1,10 @@
+# Ignore local Terraform state and logs
+.terraform/
+.terraform.*
+crash.log
+terraform.tfstate
+terraform.tfstate.backup
+
+# Ignore security keys and password files!
+*.pem
+terraform.tfvars
