@@ -12,7 +12,7 @@ const port = 3000;
 
 // --- REDIS PUB/SUB SETUP ---
 // We need TWO clients: One to write/publish, and one to strictly listen (subscribe)
-const pubClient = redis.createClient({ url: 'redis://127.0.0.1:6379' });
+const pubClient = redis.createClient({ url: 'redis://redis-service:6379' });
 const subClient = pubClient.duplicate();
 
 Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
