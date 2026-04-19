@@ -191,15 +191,15 @@ resource "oci_core_security_list" "k8s_security_list" {
 }
 
 
-# --- 9. THE DATA FORTRESS (AUTONOMOUS DATABASE) ---
-resource "oci_database_autonomous_database" "k8s_database" {
-  compartment_id           = var.tenancy_ocid
-  db_name                  = "catsdogsdb"
-  display_name             = "Cats-Vs-Dogs-DB"
-  admin_password           = var.db_admin_password
-  is_free_tier             = true
-  is_mtls_connection_required = true # <--- The Security Promise
-}
+# # --- 9. THE DATA FORTRESS (AUTONOMOUS DATABASE) ---
+# resource "oci_database_autonomous_database" "k8s_database" {
+#   compartment_id           = var.tenancy_ocid
+#   db_name                  = "catsdogsdb"
+#   display_name             = "Cats-Vs-Dogs-DB"
+#   admin_password           = var.db_admin_password
+#   is_free_tier             = true
+#   is_mtls_connection_required = true # <--- The Security Promise
+# }
 
 # --- 10. THE BRAIN VAULT (OBJECT STORAGE BUCKET) ---
 
