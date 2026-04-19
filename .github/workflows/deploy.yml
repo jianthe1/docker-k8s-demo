@@ -56,4 +56,4 @@ jobs:
           kubectl apply -f k8s-deployment.yaml -n my-web-app
           
           # 2. Tell K8s to directly update ONLY the web-app container with the new unique image tag!
-          kubectl set image deployment/web-deployment web-app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          kubectl set image deployment/web-deployment web-app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -n my-web-app
