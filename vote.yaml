@@ -21,6 +21,13 @@ spec:
         image: ghcr.io/jianthe1/docker-k8s-demo:latest
         ports:
         - containerPort: 80
+        env:
+        - name: REDIS_URL
+          value: "redis://redis-service:6379"
+        - name: PGHOST
+          value: "db"
+        - name: PGPASSWORD
+          value: "postgres"
 ---
 apiVersion: v1
 kind: Service
