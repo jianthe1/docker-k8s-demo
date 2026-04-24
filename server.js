@@ -3,26 +3,53 @@ const http = require('http');
 const { Server } = require('socket.io');
 const redis = require('redis');
 const os = require('os');
+const { Pool } = require('pg'); // <-- NEW: The Postgres Library
 
 const app = express();
-// We wrap Express in a standard HTTP server so WebSockets can attach to it
 const server = http.createServer(app);
 const io = new Server(server);
 const port = 3000;
 
-// --- REDIS PUB/SUB SETUP ---
-// We need TWO clients: One to write/publish, and one to strictly listen (subscribe)
+// --- POSTGRES SETUP (The Source of Truth) ---
+const dbPool = new Pool({
+    host: process.env.PGHOST || 'db',             // K8s service name
+    user: process.env.PGUSER || 'postgres',
+    database: process.env.PGDATABASE || 'votedb', // Our rigged database
+    password: process.env.PGPASSWORD || '',
+    port: 5432,
+});
+
+// Helper function: Always query Postgres for the real score
+async function getTrueScores() {
+    try {
+        const result = await dbPool.query('SELECT vote, count(*) as count FROM votes GROUP BY vote');
+        let scores = { cats: 0, dogs: 0 };
+        
+        result.rows.forEach(row => {
+            if (row.vote === 'a') scores.cats = parseInt(row.count);
+            if (row.vote === 'b') scores.dogs = parseInt(row.count);
+        });
+        return scores;
+    } catch (err) {
+        console.error("Postgres query failed:", err);
+        return { cats: 0, dogs: 0 };
+    }
+}
+
+// --- REDIS PUB/SUB SETUP (The Doorbell) ---
 const pubClient = redis.createClient({ url: 'redis://redis-service:6379' });
 const subClient = pubClient.duplicate();
 
 Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
     console.log('Connected to Redis Pub/Sub!');
     
-    // Listen for the megaphone: When ANY pod shouts a new vote, update OUR connected users
-    subClient.subscribe('vote-channel', (message) => {
-        const data = JSON.parse(message);
-        // io.emit pushes the data to every browser currently connected to this specific Pod
-        io.emit('update-votes', data);
+    // Listen for the doorbell: When ANY pod shouts, we query Postgres and update the UI
+    subClient.subscribe('vote-channel', async (message) => {
+        // 1. Ignore whatever the Redis message says.
+        // 2. Ask Postgres for the permanent truth.
+        const trueScores = await getTrueScores();
+        // 3. Push the real data to all connected browsers.
+        io.emit('update-votes', trueScores);
     });
 });
 
@@ -86,22 +113,18 @@ app.get('/', (req, res) => {
         <script>
             const socket = io({ transports: ['websocket'] }); // Force WebSockets immediately
 
-            // When I click a button, send the vote through the pipeline
             function castVote(choice) {
                 socket.emit('cast-vote', choice);
             }
 
-            // When the server shouts a new score down the pipeline, update the screen!
             socket.on('update-votes', (data) => {
                 const total = data.cats + data.dogs;
                 const catPercent = total === 0 ? 50 : Math.round((data.cats / total) * 100);
                 const dogPercent = total === 0 ? 50 : Math.round((data.dogs / total) * 100);
 
-                // Update the visual bars
                 document.getElementById('bar-cats').style.width = catPercent + '%';
                 document.getElementById('bar-dogs').style.width = dogPercent + '%';
 
-                // Update the text
                 document.getElementById('text-cats').innerText = \`Cats: \${data.cats} (\${catPercent}%)\`;
                 document.getElementById('text-dogs').innerText = \`Dogs: \${data.dogs} (\${dogPercent}%)\`;
                 document.getElementById('text-total').innerText = \`Total: \${total}\`;
@@ -115,26 +138,25 @@ app.get('/', (req, res) => {
 
 // --- WEBSOCKET LOGIC ---
 io.on('connection', async (socket) => {
-    // 1. When a new user connects, immediately send them the current score
-    let cats = await pubClient.hGet('votes', 'cats') || 0;
-    let dogs = await pubClient.hGet('votes', 'dogs') || 0;
-    socket.emit('update-votes', { cats: parseInt(cats), dogs: parseInt(dogs) });
+    // 1. When a user connects, send them the true score from Postgres immediately
+    const initialScores = await getTrueScores();
+    socket.emit('update-votes', initialScores);
 
-    // 2. When this specific user clicks a vote button
+    // 2. When this user clicks a vote button
     socket.on('cast-vote', async (choice) => {
         if (choice === 'cats' || choice === 'dogs') {
-            // Save vote to Redis
-            await pubClient.hIncrBy('votes', choice, 1);
+            const voteValue = choice === 'cats' ? 'a' : 'b';
+            const randomId = choice + '-' + Math.random().toString(36).substring(2, 9);
             
-            // Get the brand new totals
-            let newCats = await pubClient.hGet('votes', 'cats') || 0;
-            let newDogs = await pubClient.hGet('votes', 'dogs') || 0;
-            
-            // Shout the new totals into the Redis Megaphone so ALL pods hear it
-            pubClient.publish('vote-channel', JSON.stringify({ 
-                cats: parseInt(newCats), 
-                dogs: parseInt(newDogs) 
-            }));
+            try {
+                // Instantly save the vote directly into Postgres
+                await dbPool.query('INSERT INTO votes (id, vote) VALUES ($1, $2)', [randomId, voteValue]);
+                
+                // Ring the Redis doorbell ("ding!") so all pods know the DB has changed
+                pubClient.publish('vote-channel', 'ding!');
+            } catch (err) {
+                console.error("Failed to save vote to Postgres:", err);
+            }
         }
     });
 });
