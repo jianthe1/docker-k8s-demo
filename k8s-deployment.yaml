@@ -293,6 +293,7 @@ kind: Service
 metadata:
   # CRITICAL: The default worker looks exactly for the DNS name "db"
   name: db 
+  namespace: my-web-app
 spec:
   type: ClusterIP
   ports:
