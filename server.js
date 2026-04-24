@@ -161,8 +161,20 @@ io.on('connection', async (socket) => {
     });
 });
 
-// --- HEALTH CHECKS ---
-app.get('/health', (req, res) => res.status(200).send('OK'));
-app.get('/readyz', (req, res) => res.status(200).send('OK'));
+// ==========================================
+// KUBERNETES HEALTH & READINESS PROBES
+// ==========================================
+
+// Liveness Probe: K8s asks "Are you frozen?"
+app.get('/health', (req, res) => {
+    res.status(200).send("Healthy");
+});
+
+// Readiness Probe: K8s asks "Are you ready to receive internet traffic?"
+app.get('/readyz', (req, res) => {
+    // In a massive production app, you might check your Redis/DB connection here.
+    // For now, if the app is awake, it is ready!
+    res.status(200).send("Ready");
+});
 
 server.listen(port, () => console.log("Real-Time App listening on port " + port));
