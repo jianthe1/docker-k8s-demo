@@ -69,8 +69,16 @@ spec:
         ports:
         - containerPort: 3000
         env:
+        # === CONNECTION CONFIGS ===
         - name: REDIS_URL
           value: "redis://redis-service:6379"
+        - name: PGHOST
+          value: "db"
+        - name: PGPASSWORD
+          value: "postgres"
+        - name: PGDATABASE
+          value: "postgres"
+         # ========================== 
         readinessProbe:
           httpGet:
             path: /readyz           # The URL path K8s will check
