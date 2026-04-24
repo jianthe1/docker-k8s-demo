@@ -18,3 +18,8 @@ spec:
       containers:
       - name: worker
         image: ghcr.io/jianthe1/docker-k8s-demo:latest
+        env:
+        - name: REDIS_URL
+          value: "redis://redis-service:6379"
+        - name: PGHOST
+          value: "db"
