@@ -205,7 +205,7 @@ spec:
       containers:
       - name: vote
         # ARCHITECT'S NOTE: If you built your own custom Docker image, change this line!
-        image: chrisss404/example-voting-app-vote
+        image: ghcr.io/jianthe1/docker-k8s-demo:latest
         ports:
         - containerPort: 80
         env:
@@ -250,7 +250,7 @@ spec:
     spec:
       containers:
       - name: worker
-        image: mikesir87/examplevotingapp_worker
+        image: ghcr.io/jianthe1/docker-k8s-demo:latest
         env:
         - name: REDIS_URL
           value: "redis://redis-service:6379"
