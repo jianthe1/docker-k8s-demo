@@ -32,7 +32,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: redis-service
+  name: redis
   namespace: my-web-app
 spec:
   selector:
@@ -253,7 +253,7 @@ spec:
         image: ghcr.io/dockersamples/example-voting-app-worker
         env:
         - name: REDIS_URL
-          value: "redis://redis-service:6379"
+          value: "redis://redis:6379"
         - name: PGHOST
           value: "db"
 # ==============================
