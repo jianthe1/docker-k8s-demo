@@ -72,7 +72,7 @@ spec:
         env:
         # === CONNECTION CONFIGS ===
         - name: REDIS_URL
-          value: "redis://redis-service:6379"
+          value: "redis://redis:6379"
         - name: PGHOST
           value: "db"
         - name: PGPASSWORD
@@ -210,7 +210,7 @@ spec:
         - containerPort: 80
         env:
         - name: REDIS_URL
-          value: "redis://redis-service:6379"
+          value: "redis://redis:6379"
         - name: PGHOST
           value: "db"
         - name: PGPASSWORD
