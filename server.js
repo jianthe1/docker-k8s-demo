@@ -37,7 +37,7 @@ async function getTrueScores() {
 
 // --- REDIS PUB/SUB SETUP ---
 // FIX: Using process.env.REDIS_URL to ensure we don't connect to localhost (::1)
-const redisUrl = process.env.REDIS_URL || 'redis://redis-service:6379';
+const redisUrl = process.env.REDIS_URL || 'redis://redis:6379';
 
 const pubClient = redis.createClient({ url: redisUrl });
 const subClient = pubClient.duplicate();
