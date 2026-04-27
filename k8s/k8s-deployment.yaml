@@ -132,12 +132,13 @@ metadata:
   name: web-service
   namespace: my-web-app
 spec:
-  type: LoadBalancer 
+  type: NodePort 
   selector:
     app: web
   ports:
   - port: 80
     targetPort: 3000
+    nodePort: 31886
 
 
 ---
