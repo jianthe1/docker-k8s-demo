@@ -7,8 +7,16 @@ variable "tenancy_ocid" {}
 variable "user_ocid" {}
 variable "fingerprint" {}
 variable "region" {}
+variable "private_key_path" {
+  description = "Used for local Windows execution via terraform.tfvars"
+  default     = ""
+}
+
 variable "private_key" {
-  sensitive = true
+  description = "Used for GitHub Actions CI/CD via Repo Secrets"
+  sensitive   = true
+  default     = ""
+
 }
 
 # --- 2. THE PROVIDER (Telling Terraform we are using Oracle) ---
@@ -17,7 +25,8 @@ provider "oci" {
   user_ocid        = var.user_ocid
   fingerprint      = var.fingerprint
   region           = var.region
-  private_key  = var.private_key
+  private_key_path = var.private_key_path
+  private_key      = var.private_key
 }
 
 # --- 3. THE HANDSHAKE (Ask Oracle for a list of Data Centers) ---
@@ -32,7 +41,7 @@ output "success_message" {
 
 # --- 5. OUR LIVE KUBERNETES SERVER ---
 resource "oci_core_instance" "k8s_server" {
-  availability_domain = "YlYw:AP-KULAI-2-AD-1"
+  availability_domain = data.oci_identity_availability_domains.ad_list.availability_domains[0].name
   compartment_id      = var.tenancy_ocid
   display_name        = "instance-20260330-1757"
   shape               = "VM.Standard.A1.Flex"
@@ -85,7 +94,7 @@ resource "oci_core_subnet" "k8s_subnet" {
   # Clean Code: Using the VCN's default routing and security lists automatically
   route_table_id    = oci_core_vcn.k8s_vcn.default_route_table_id
   dhcp_options_id   = oci_core_vcn.k8s_vcn.default_dhcp_options_id
-  security_list_ids = [oci_core_vcn.k8s_vcn.default_security_list_id]
+  security_list_ids = [oci_core_security_list.k8s_security_list.id]
 }
 
 # --- 8. OUR LIVE FIREWALL (SECURITY LIST) ---
@@ -186,6 +195,18 @@ resource "oci_core_security_list" "k8s_security_list" {
     tcp_options {
       min = 31886
       max = 31886
+    }
+  }
+
+  ingress_security_rules {
+    description = "Allow ArgoCD Web UI (NodePort)"
+    protocol    = "6"  # In Oracle Terraform, "6" is the strict protocol number for TCP
+    source      = "0.0.0.0/0"
+    source_type = "CIDR_BLOCK"
+    stateless   = false
+    tcp_options {
+      min = 30540  # REPLACE THIS with your actual 5-digit ArgoCD NodePort
+      max = 30540  # REPLACE THIS with your actual 5-digit ArgoCD NodePort
     }
   }
 }
