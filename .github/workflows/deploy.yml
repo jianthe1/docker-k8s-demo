@@ -6,7 +6,7 @@ on:
     # Optional: Ignore changes to the k8s folder so the pipeline doesn't trigger itself in an infinite loop
       - 'src/**'       # Only run if app code changes
       - 'Dockerfile'
-      - '.github/workflows/main.yml'
+      - '.github/workflows/deploy.yml'
 
 env:
   REGISTRY: ghcr.io
