@@ -65,7 +65,7 @@ spec:
     spec:
       containers:
       - name: web-app
-        image: ghcr.io/jianthe1/docker-k8s-demo:db39e021478e31ed4ada1e256a721db9fbd62e3c
+        image: ghcr.io/jianthe1/docker-k8s-demo:acaacdd0a6355ab6168a30f7246e2a3b4bbe5214
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
