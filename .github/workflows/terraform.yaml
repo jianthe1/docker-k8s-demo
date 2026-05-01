@@ -3,7 +3,9 @@ name: 'Terraform Enterprise GitOps'
 on:
   push:
     branches: [ "main" ] # Runs every time you push to the main branch
-
+    paths:
+      - 'terraform/**' # Only run if terraform files change
+      
 jobs:
   terraform:
     name: 'Terraform Apply'

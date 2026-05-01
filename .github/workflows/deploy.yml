@@ -4,8 +4,9 @@ on:
   push:
     branches: [ "main" ]
     # Optional: Ignore changes to the k8s folder so the pipeline doesn't trigger itself in an infinite loop
-    paths-ignore:
-      - 'k8s/**'
+      - 'src/**'       # Only run if app code changes
+      - 'Dockerfile'
+      - '.github/workflows/main.yml'
 
 env:
   REGISTRY: ghcr.io
