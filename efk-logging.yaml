@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fluent-bit-daemonset
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://fluent.github.io/helm-charts'
+    targetRevision: 0.43.0
+    chart: fluent-bit
+    helm:
+      values: |
+        # This tells Fluent Bit where to send the logs
+        backend:
+          type: es
+          es:
+            host: elasticsearch-master.logging.svc.cluster.local
+            port: 9200
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: logging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
